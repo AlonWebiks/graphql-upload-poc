@@ -1,0 +1,8 @@
+{
+  "useWorkspaces": false,
+  "useNx": false,
+  "version": "0.0.0",
+  "npmClient": "npm",
+  "packages": ["packages/*"]
+
+}
