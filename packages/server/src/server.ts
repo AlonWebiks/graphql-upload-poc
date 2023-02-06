@@ -17,6 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { graphqlUploadExpress } from 'graphql-upload';
+import { downloadFile } from './s3';
 dotenv.config();
 const subscriptionPath = process.env.SUBSCRIPTION_PATH || '/graphql';
 const graphqlPath = process.env.GRAPHQL_PATH || '/graphql';
@@ -31,6 +32,13 @@ app.use(
     cors<cors.CorsRequest>({allowedHeaders: ['*'], origin: '*'}),
     bodyParser.json(),
 );
+
+app.get('/files*', async (req, res) => {
+    const key = req.path.substring(7);
+    console.log(key);
+    res.attachment(key.split('/')[1]); 
+    downloadFile(key, res);
+})
 
 // console.log(__dirname);
 console.log('SSL', process.env.SSL);

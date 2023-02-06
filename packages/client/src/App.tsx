@@ -43,6 +43,7 @@ const apolloClient = new ApolloClient({
 function App() {
   const [file, setFile] = useState<File>();
   const [uploading, setUploading] = useState(false);
+  const [links, setLinks] = useState<string[]>([])
 
   const getFiles = async () => {
     const res = await apolloClient.query({
@@ -54,7 +55,8 @@ function App() {
         }
       `,
     });
-    console.log(res);
+    const newLinks = res.data.files.map(({url}: {url: string}) => url);
+    setLinks(links => Array.from(new Set([...links, ...newLinks])))
   };
 
   const subscribeToFiles = () => {
@@ -66,8 +68,11 @@ function App() {
           }
         }
       `
-    }).subscribe(data => {
-      console.log(data);
+    }).subscribe(msg => {
+      console.log(msg);
+      
+      const link = msg.data.fileCreated.url;
+      setLinks(links => Array.from(new Set([...links, link])))
     });
     return sub;
   };
@@ -95,6 +100,15 @@ function App() {
     }
     setUploading(false);
   };
+
+  const downloadFile = async (link: string) => {
+      const a = document.createElement('a');
+      a.setAttribute('href', link);
+      a.setAttribute('download', 'file');
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+  }
 
   useEffect(() => {
     getFiles();
@@ -124,6 +138,7 @@ function App() {
         <input type="file" onChange={onFileChange} />
         <button onClick={uploadFile}>UPLOAD {file?.name}</button>
         {uploading && <div>Uploading file</div>}
+        {links.map(link => <a key={link} className="App-link" style={{fontSize: 10}} href={link} target="_blank" rel="noreferrer" download>download {link.substring(link.length-10)}</a>)}
       </header>
     </div>
   );

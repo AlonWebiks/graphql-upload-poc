@@ -3,6 +3,7 @@ import {GraphQLUpload, FileUpload } from 'graphql-upload'
 import { GraphQLError } from "graphql";
 import fs from 'fs';
 import {finished} from 'stream/promises';
+import { uploadFile } from "./s3";
 
 interface File {
     url: string;
@@ -22,15 +23,12 @@ async function createFile(file: FileInput): Promise<File> {
     }
     let newFile: File;
     if (file.upload != undefined) {
-        console.log(file);
-        
         const {createReadStream, filename, mimetype, encoding} = await file.upload!;
         console.log({filename, mimetype, encoding});
         const stream = createReadStream();
-        const writeStream = fs.createWriteStream('./uploads/' + filename); 
-        stream.pipe(writeStream);
-        await finished(writeStream);
-        newFile = { url: 'http://localost:4000/uploads/' + filename };
+        const url = await uploadFile({stream, filename});
+        console.log('uploaded file url: ' + url);
+        newFile = { url };
     } else {
         newFile = { url: file.url! };
     }
